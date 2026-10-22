@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ff6900">
+<title>小米 MiMo TTS 试听工具</title>
+<style>
+  :root{
+    --accent:#ff6900;
+    --accent-soft:#fff1e6;
+    --bg:#f5f6f8;
+    --card:#ffffff;
+    --text:#1b1e24;
+    --muted:#6b7280;
+    --line:#e5e7eb;
+    --input-bg:#f8f9fb;
+    --ok:#15803d;
+    --err:#dc2626;
+    --chip-bg:#f1f3f6;
+    --shadow:0 1px 3px rgba(16,24,40,.06),0 1px 2px rgba(16,24,40,.04);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --accent:#ff7d1f;
+      --accent-soft:#3a2413;
+      --bg:#101317;
+      --card:#191d24;
+      --text:#e8eaed;
+      --muted:#9aa3af;
+      --line:#2a3038;
+      --input-bg:#12161c;
+      --ok:#4ade80;
+      --err:#f87171;
+      --chip-bg:#232935;
+      --shadow:none;
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15px;line-height:1.55;
+    padding-bottom:96px;
+  }
+  a{color:var(--accent);text-decoration:none}
+  header{
+    background:linear-gradient(135deg,#ff6900,#ff9a3d);
+    color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 16px;
+  }
+  header h1{margin:0;font-size:19px;font-weight:700;letter-spacing:.5px}
+  header p{margin:4px 0 0;font-size:12.5px;opacity:.92}
+  main{max-width:560px;margin:0 auto;padding:14px 14px 0}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:14px;margin-bottom:14px;box-shadow:var(--shadow);
+  }
+  .card>h2{
+    margin:0 0 12px;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;
+  }
+  .card>h2 .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text)}
+  .field label .sub{font-weight:400;color:var(--muted);font-size:12px;margin-left:4px}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .hint.warn{color:#b45309}
+  input[type=text],input[type=password],input[type=number],select,textarea{
+    width:100%;background:var(--input-bg);color:var(--text);
+    border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;font-size:16px;font-family:inherit;
+    outline:none;transition:border-color .15s;
+    -webkit-appearance:none;appearance:none;
+  }
+  select{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
+  textarea{min-height:84px;resize:vertical;line-height:1.5}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+  .row{display:flex;gap:10px}
+  .row>*{flex:1;min-width:0}
+  .keyrow{display:flex;gap:8px;align-items:stretch}
+  .keyrow input{flex:1}
+  .keyrow button{flex:none;width:52px}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:none;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;
+    font-family:inherit;cursor:pointer;transition:filter .15s,transform .05s;
+    min-height:42px;
+  }
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:disabled{background:#c9cdd4;color:#fff;cursor:not-allowed}
+  .btn-ghost{background:var(--chip-bg);color:var(--text)}
+  .btn-line{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+  .btn-block{width:100%}
+  .tabs{display:flex;background:var(--chip-bg);border-radius:12px;padding:4px;margin-bottom:14px}
+  .tabs button{
+    flex:1;border:none;background:transparent;color:var(--muted);
+    padding:9px 4px;border-radius:9px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;
+  }
+  .tabs button.active{background:var(--card);color:var(--text);box-shadow:var(--shadow)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{
+    border:none;background:var(--chip-bg);color:var(--text);
+    border-radius:999px;padding:6px 12px;font-size:12.5px;font-family:inherit;cursor:pointer;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .chip:active{background:var(--accent-soft);color:var(--accent)}
+  .chip-label{font-size:12px;color:var(--muted);margin:10px 0 2px}
+  .tagchip{border-radius:8px;font-size:12px;padding:5px 9px}
+  .count{font-size:11.5px;color:var(--muted);text-align:right;margin-top:4px}
+  details{margin-top:10px;border:1px dashed var(--line);border-radius:10px;padding:8px 12px}
+  details summary{font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"▸ ";color:var(--accent)}
+  details[open] summary::before{content:"▾ "}
+  pre{
+    background:var(--input-bg);border:1px solid var(--line);border-radius:8px;
+    padding:10px;font-size:11.5px;line-height:1.5;overflow-x:auto;white-space:pre-wrap;word-break:break-all;
+    margin:8px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  .badge{
+    display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;
+    padding:3px 10px;border-radius:999px;background:var(--chip-bg);color:var(--muted);
+  }
+  .badge.ok{background:rgba(22,163,74,.12);color:var(--ok)}
+  .badge.err{background:rgba(220,38,38,.1);color:var(--err)}
+  .badge.run{background:var(--accent-soft);color:var(--accent)}
+  audio{width:100%;height:44px;margin-top:10px}
+  .fileline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .fileline input[type=file]{display:none}
+  .spinner{
+    width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;
+    border-radius:50%;animation:spin .7s linear infinite;flex:none;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .actionbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    background:color-mix(in srgb,var(--card) 88%,transparent);
+    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+  }
+  .actionbar .inner{max-width:532px;margin:0 auto;display:flex;gap:10px}
+  .actionbar .btn-primary{flex:1;font-size:15.5px;min-height:48px}
+  .actionbar .btn-ghost{flex:none;min-height:48px}
+  .log{margin-top:10px;font-size:12px;color:var(--muted);max-height:110px;overflow-y:auto}
+  .log div{padding:2px 0;border-bottom:1px dashed var(--line);word-break:break-all}
+  .log div:last-child{border-bottom:none}
+  .log .t{color:var(--muted);opacity:.7;margin-right:6px}
+  .errbox{
+    display:none;margin-top:10px;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);
+    color:var(--err);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6;
+  }
+  .errbox.show{display:block}
+  footer{
+    max-width:560px;margin:0 auto;padding:4px 16px 24px;font-size:11.5px;color:var(--muted);line-height:1.8;
+  }
+  footer b{color:var(--text)}
+  .toast{
+    position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);
+    background:#23262d;color:#fff;font-size:13px;padding:9px 16px;border-radius:999px;
+    opacity:0;pointer-events:none;transition:all .25s;z-index:99;max-width:80%;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>小米 MiMo TTS · 试听工具</h1>
+  <p>填入 API Key、提示词与合成文本，一键生成语音并试听 / 下载</p>
+</header>
+
+<main>
+  <div class="tabs" role="tablist">
+    <button id="tabBtn-mimo" class="active" onclick="switchTab('mimo')">MiMo 合成</button>
+    <button id="tabBtn-custom" onclick="switchTab('custom')">自定义接口</button>
+  </div>
+
+  <!-- ============ MiMo 模式 ============ -->
+  <section id="tab-mimo">
+    <div class="card">
+      <h2><span class="dot"></span>接口配置</h2>
+      <div class="field">
+        <label for="apiKey">API Key<span class="sub">sk- 开头，仅保存在本机浏览器</span></label>
+        <div class="keyrow">
+          <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false">
+          <button class="btn btn-ghost" type="button" onclick="toggleKey()">显示</button>
+        </div>
+        <div class="hint">在 <a href="https://platform.xiaomimimo.com/#/console/api-keys" target="_blank" rel="noopener">platform.xiaomimimo.com</a> 创建 API Key。请求由本页面直接发往小米官方接口（已确认支持浏览器跨域），不经过任何第三方服务器。</div>
+      </div>
+      <div class="field">
+        <label for="url">接口地址</label>
+        <input id="url" type="text" spellcheck="false" value="https://api.xiaomimimo.com/v1/chat/completions">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>合成参数</h2>
+      <div class="field">
+        <label for="model">模型</label>
+        <select id="model">
+          <option value="mimo-v2.5-tts">mimo-v2.5-tts · 预置音色合成</option>
+          <option value="mimo-v2.5-tts-voicedesign">mimo-v2.5-tts-voicedesign · 文本设计音色</option>
+          <option value="mimo-v2.5-tts-voiceclone">mimo-v2.5-tts-voiceclone · 音频复刻音色</option>
+        </select>
+        <div class="hint" id="modelHint"></div>
+      </div>
+      <div class="field" id="voiceField">
+        <label for="voice">音色<span class="sub">预置音色仅 mimo-v2.5-tts 支持</span></label>
+        <select id="voice"></select>
+      </div>
+      <div class="field" id="cloneField" hidden>
+        <label>克隆音频样本<span class="sub">mp3 / wav，Base64 后不超过 10MB</span></label>
+        <div class="fileline">
+          <button class="btn btn-line" type="button" onclick="document.getElementById('cloneFile').click()">选择音频文件</button>
+          <input id="cloneFile" type="file" accept="audio/mpeg,audio/mp3,audio/wav,.mp3,.wav">
+          <span class="badge" id="cloneName">未选择</span>
+          <button class="btn btn-ghost" type="button" id="cloneClear" onclick="clearClone()" hidden>移除</button>
+        </div>
+        <div class="hint">复刻音色时，user 消息可留空或写风格指令；样本音频不会上传到除小米接口以外的任何地方。</div>
+      </div>
+      <div class="field">
+        <label for="format">音频格式</label>
+        <select id="format">
+          <option value="wav">WAV（可直接播放）</option>
+          <option value="pcm16">PCM16（24kHz 裸流，播放时自动封装为 WAV）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span><span id="promptLabel">提示词 / 风格指令</span></h2>
+      <div class="field">
+        <textarea id="prompt" placeholder="例如：沉稳专业的新闻播报腔，语速均匀，咬字清晰。"></textarea>
+        <div class="hint" id="promptHint"></div>
+        <div class="chip-label">快捷填入（点击后可直接修改）：</div>
+        <div class="chips" id="styleChips"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>合成文本<span class="sub" style="font-weight:400;color:var(--muted);font-size:12px">（实际发声的内容）</span></h2>
+      <div class="field">
+        <textarea id="text" style="min-height:110px" placeholder="输入要转换成语音的文本..."></textarea>
+        <div class="count" id="textCount">0 字</div>
+        <div class="chip-label">音频标签（点击插入到光标处，须放在文本开头）：</div>
+        <div class="chips" id="styleTags"></div>
+        <div class="chip-label">细粒度标签（可插在文本任意位置）：</div>
+        <div class="chips" id="inlineTags"></div>
+      </div>
+      <details>
+        <summary>查看即将发送的请求 JSON</summary>
+        <pre id="mimoPreview">点击“生成并试听”后显示</pre>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 自定义模式 ============ -->
+  <section id="tab-custom" hidden>
+    <div class="card">
+      <h2><span class="dot"></span>请求配置</h2>
+      <div class="field">
+        <label for="cUrl">接口地址</label>
+        <input id="cUrl" type="text" placeholder="https://your-tts-api.example.com/synthesize" spellcheck="false">
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="cMethod">请求方法</label>
+          <select id="cMethod">
+            <option value="POST">POST</option>
+            <option value="GET">GET</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cSpeed">语速 speed</label>
+          <input id="cSpeed" type="number" step="0.1" min="0.5" max="2" value="1">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="cPitch">音调 pitch</label>
+          <input id="cPitch" type="number" step="1" value="0">
+        </div>
+        <div class="field">
+          <label for="cVolume">音量 volume</label>
+          <input id="cVolume" type="number" step="1" min="0" max="100" value="50">
+        </div>
+      </div>
+      <div class="field">
+        <label for="cHeaders">请求头（JSON）</label>
+        <textarea id="cHeaders" spellcheck="false" style="min-height:76px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px"></textarea>
+      </div>
+      <div class="field">
+        <label for="cBody">请求体模板（JSON，支持占位符）</label>
+        <textarea id="cBody" spellcheck="false" style="min-height:150px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px"></textarea>
+        <div class="hint">可用占位符：<code>{{text}}</code> 合成文本 · <code>{{prompt}}</code> 提示词 · <code>{{voice}}</code> 音色 · <code>{{format}}</code> 格式 · <code>{{model}}</code> 模型 · <code>{{speed}}</code> <code>{{pitch}}</code> <code>{{volume}}</code></div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="cParse">响应解析方式</label>
+          <select id="cParse">
+            <option value="auto">自动识别</option>
+            <option value="json-base64">JSON 字段（Base64 音频）</option>
+            <option value="json-url">JSON 字段（音频 URL）</option>
+            <option value="binary">原始二进制音频流</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cPath">音频字段路径</label>
+          <input id="cPath" type="text" spellcheck="false" value="choices.0.message.audio.data">
+        </div>
+      </div>
+      <div class="hint">自动识别会按广度优先查找响应中第一个“像音频”的字段（URL 或长 Base64 串）。自定义模式下，“合成文本 / 提示词”仍取 MiMo 页填写的内容。</div>
+      <details>
+        <summary>查看即将发送的请求 JSON</summary>
+        <pre id="customPreview">点击“生成并试听”后显示</pre>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 结果区 ============ -->
+  <div class="card">
+    <h2><span class="dot"></span>试听结果</h2>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="badge" id="statusBadge">等待生成</span>
+      <span class="hint" id="statusMeta" style="margin:0"></span>
+    </div>
+    <audio id="player" controls preload="auto"></audio>
+    <div class="row" style="margin-top:10px">
+      <button class="btn btn-line" type="button" id="btnDownload" disabled onclick="downloadAudio()">下载音频</button>
+      <button class="btn btn-ghost" type="button" onclick="copyLastRequest()">复制请求 JSON</button>
+    </div>
+    <div class="hint" id="audioInfo"></div>
+    <div class="chip-label" id="historyLabel" hidden>本次会话历史（点击回放）：</div>
+    <div class="chips" id="history"></div>
+    <div class="errbox" id="errBox"></div>
+    <div class="log" id="log"></div>
+  </div>
+</main>
+
+<footer>
+  <b>说明</b><br>
+  · 本页为纯静态页面，所有请求直接从你的浏览器发往目标接口，不经过任何中转服务器。<br>
+  · API Key 仅写入本机浏览器 localStorage，清除浏览器数据或点击“清除配置”即可移除。<br>
+  · MiMo 调用规则：合成文本放在 assistant 消息（发声），提示词/风格指令放在 user 消息（不发声）；文本开头可加 (开心)(东北话) 等风格标签，任意位置可加 [笑][叹气] 等细粒度标签，(唱歌) 开头可触发演唱。<br>
+  · 预置音色：冰糖 / 茉莉 / 苏打 / 白桦（中文），Mia / Chloe / Milo / Dean（英文）。<br>
+  · MiMo 目前限时免费，限速约 100 次/分钟，以官方页面为准。
+</footer>
+
+<div class="actionbar">
+  <div class="inner">
+    <button class="btn btn-primary" id="btnGenerate" type="button" onclick="generate()">生成并试听</button>
+    <button class="btn btn-ghost" type="button" onclick="clearConfig()">清除配置</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- 常量 ---------- */
+  var VOICES = [
+    {id:'mimo_default', name:'MiMo-默认', desc:'集群默认'},
+    {id:'冰糖', name:'冰糖', desc:'中文 · 女声'},
+    {id:'茉莉', name:'茉莉', desc:'中文 · 女声'},
+    {id:'苏打', name:'苏打', desc:'中文 · 男声'},
+    {id:'白桦', name:'白桦', desc:'中文 · 男声'},
+    {id:'Mia', name:'Mia', desc:'英文 · 女声'},
+    {id:'Chloe', name:'Chloe', desc:'英文 · 女声'},
+    {id:'Milo', name:'Milo', desc:'英文 · 男声'},
+    {id:'Dean', name:'Dean', desc:'英文 · 男声'}
+  ];
+  var MODEL_HINTS = {
+    'mimo-v2.5-tts': '使用预置精品音色，下方音色下拉可选；支持唱歌模式。',
+    'mimo-v2.5-tts-voicedesign': '通过“提示词”描述来生成音色，user 消息必填，无需选择音色。',
+    'mimo-v2.5-tts-voiceclone': '上传一段音频样本复刻音色，user 消息可留空。'
+  };
+  var PROMPT_HINTS = {
+    'mimo-v2.5-tts': '放在 user 消息中，控制语气/情绪/语速/方言，不会被打成语音。',
+    'mimo-v2.5-tts-voicedesign': '这就是音色描述（必填）：写清性别年龄、音色质感、情绪语气、语速节奏，1-4 句为宜，避免混响/EQ 等后期词。',
+    'mimo-v2.5-tts-voiceclone': '可选。留空则按样本原声合成；也可写风格指令控制语气。'
+  };
+  var PROMPT_PLACEHOLDERS = {
+    'mimo-v2.5-tts': '例如：沉稳专业的新闻播报腔，语速均匀，咬字清晰。',
+    'mimo-v2.5-tts-voicedesign': '例如：一位年迈的老先生，说带北方口音的普通话，语速缓慢而沉稳，嗓音略带沙哑和沧桑感。',
+    'mimo-v2.5-tts-voiceclone': '可选，例如：用温柔舒缓的语气，语速稍慢。'
+  };
+  var STYLE_CHIPS = {
+    'mimo-v2.5-tts': [
+      {label:'轻快报喜', text:'用轻快上扬的语调向领导报喜，语速稍快，带着查到成绩后压抑不住的激动与小骄傲，声音明亮有活力。'},
+      {label:'新闻播报', text:'沉稳专业的新闻播报腔，语速均匀，咬字清晰，语气客观可信。'},
+      {label:'睡前电台', text:'温柔慵懒的深夜电台女声，语速缓慢，气息轻柔，像在耳边轻声说话。'},
+      {label:'带货直播', text:'激情澎湃的带货直播腔，语速偏快，富有号召力，说到重点时加重语气。'},
+      {label:'少年恶作剧', text:'用明亮活泼的青少年嗓音，带着恶作剧得逞后的得意与戏谑，语速偏快且咬字轻巧。'},
+      {label:'导演模式', text:'【角色】百年门阀岑家的现任大当家，深居简出，对人有着极强的阶级疏离感。\n【场景】在祠堂的阴影里，看着不顾一切冲破防线来找她的男人。\n【指导】冰冷、慵懒却极具威压的低音御姐。语速极慢，每个字都像在舌尖滚过；尾音处加入极轻微的气声收束。'}
+    ],
+    'mimo-v2.5-tts-voicedesign': [
+      {label:'沧桑老爷爷', text:'一位年迈的老先生，说带北方口音的普通话，语速缓慢而沉稳，嗓音略带沙哑和沧桑感，仿佛一位饱经风霜的老爷爷在讲故事。'},
+      {label:'清甜少女', text:'二十多岁的年轻女性，声音清亮甜美，语速轻快自然，像在跟朋友分享开心的日常。'},
+      {label:'深夜电台DJ', text:'低沉磁性的男声，像深夜电台DJ，语速缓慢，气息沉稳，偶尔带着一点笑意。'},
+      {label:'ASMR 耳语', text:'Young female, extreme close-up with a binaural ASMR feel. Audible breathing and soft lip sounds. She speaks very slowly, deeply relaxing.'}
+    ],
+    'mimo-v2.5-tts-voiceclone': [
+      {label:'留空（原声）', text:''},
+      {label:'温柔指令', text:'用温柔舒缓的语气，语速稍慢。'}
+    ]
+  };
+  var STYLE_TAGS = ['(开心)','(悲伤)','(愤怒)','(惊讶)','(兴奋)','(委屈)','(平静)','(温柔)','(高冷)','(活泼)','(慵懒)','(磁性)','(甜美)','(沙哑)','(御姐音)','(正太音)','(大叔音)','(台湾腔)','(东北话)','(四川话)','(粤语)','(孙悟空)','(林黛玉)','(唱歌)'];
+  var INLINE_TAGS = ['[笑]','[轻笑]','[大笑]','[冷笑]','[叹气]','[深呼吸]','[紧张]','[激动]','[颤抖]','(破音)','[气声]','[哽咽]','[沉默片刻]','[咳嗽]','[吸气]'];
+
+  var DEFAULTS = {
+    mode:'mimo',
+    apiKey:'',
+    url:'https://api.xiaomimimo.com/v1/chat/completions',
+    model:'mimo-v2.5-tts',
+    voice:'冰糖',
+    format:'wav',
+    prompt:'自然亲切的播报语气，语速适中，咬字清晰。',
+    text:'你好，这是小米 MiMo 语音合成的试听。今天天气不错，很适合出去走走。',
+    cUrl:'',
+    cMethod:'POST',
+    cHeaders:'{\n  "Content-Type": "application/json"\n}',
+    cBody:'{\n  "text": "{{text}}",\n  "prompt": "{{prompt}}",\n  "voice": "{{voice}}",\n  "format": "{{format}}",\n  "speed": "{{speed}}"\n}',
+    cParse:'auto',
+    cPath:'choices.0.message.audio.data',
+    cSpeed:'1',
+    cPitch:'0',
+    cVolume:'50'
+  };
+  var LS_KEY = 'mimo-tts-tester-v1';
+
+  /* ---------- 状态 ---------- */
+  var state = loadState();
+  var cloneVoice = null;      // data URI
+  var cloneName = '';
+  var currentAudio = null;    // {url, mime, ext, size, label}
+  var lastRequest = null;     // {url, method, headers, body}
+  var history = [];
+  var busy = false;
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(LS_KEY);
+      if(raw){
+        var saved = JSON.parse(raw);
+        var s = {};
+        for(var k in DEFAULTS){ s[k] = (saved[k] !== undefined && saved[k] !== null) ? saved[k] : DEFAULTS[k]; }
+        return s;
+      }
+    }catch(e){}
+    var d = {};
+    for(var k2 in DEFAULTS){ d[k2] = DEFAULTS[k2]; }
+    return d;
+  }
+  function saveState(){
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  /* ---------- 工具 ---------- */
+  function $(id){ return document.getElementById(id); }
+  function esc(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function now(){ var d=new Date(); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+':'+('0'+d.getSeconds()).slice(-2); }
+  var toastTimer = null;
+  function toast(msg){
+    var t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+  }
+  function log(msg){
+    var box = $('log');
+    var div = document.createElement('div');
+    div.innerHTML = '<span class="t">' + now() + '</span>' + esc(msg);
+    box.insertBefore(div, box.firstChild);
+    while(box.children.length > 12){ box.removeChild(box.lastChild); }
+  }
+  function setStatus(type, text, meta){
+    var b = $('statusBadge');
+    b.className = 'badge ' + (type || '');
+    b.textContent = text;
+    $('statusMeta').textContent = meta || '';
+  }
+  function showError(title, detail){
+    var box = $('errBox');
+    box.innerHTML = '<b>' + esc(title) + '</b>' + (detail ? '<br>' + esc(detail) : '');
+    box.classList.add('show');
+    log('错误：' + title + (detail ? ' - ' + detail : ''));
+  }
+  function clearError(){ $('errBox').classList.remove('show'); }
+
+  /* ---------- 初始化表单 ---------- */
+  var FIELDS = ['apiKey','url','model','voice','format','prompt','text','cUrl','cMethod','cHeaders','cBody','cParse','cPath','cSpeed','cPitch','cVolume'];
+  function initForm(){
+    // 音色下拉
+    var sel = $('voice');
+    VOICES.forEach(function(v){
+      var o = document.createElement('option');
+      o.value = v.id;
+      o.textContent = v.name + '（' + v.desc + '）';
+      sel.appendChild(o);
+    });
+    FIELDS.forEach(function(id){
+      var el = $(id);
+      if(!el) return;
+      el.value = state[id];
+      el.addEventListener('input', function(){ state[id] = el.value; saveState(); });
+      el.addEventListener('change', function(){ state[id] = el.value; saveState(); onFieldChange(id); });
+    });
+    renderTags();
+    refreshModelUI();
+    updateCount();
+  }
+  function onFieldChange(id){
+    if(id === 'model'){ refreshModelUI(); }
+  }
+  function renderTags(){
+    var sc = $('styleChips'); sc.innerHTML = '';
+    (STYLE_CHIPS[state.model] || []).forEach(function(c){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.textContent = c.label;
+      b.onclick = function(){
+        $('prompt').value = c.text;
+        state.prompt = c.text; saveState();
+        $('prompt').focus();
+      };
+      sc.appendChild(b);
+    });
+    function fill(container, arr, insert){
+      container.innerHTML = '';
+      arr.forEach(function(t){
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'chip tagchip'; b.textContent = t;
+        b.onclick = function(){ insert($('text'), t); };
+        container.appendChild(b);
+      });
+    }
+    fill($('styleTags'), STYLE_TAGS, insertAtCursor);
+    fill($('inlineTags'), INLINE_TAGS, insertAtCursor);
+  }
+  function insertAtCursor(ta, txt){
+    var start = ta.selectionStart, end = ta.selectionEnd;
+    var v = ta.value;
+    ta.value = v.slice(0, start) + txt + v.slice(end);
+    ta.selectionStart = ta.selectionEnd = start + txt.length;
+    state.text = ta.value; saveState(); updateCount();
+    ta.focus();
+  }
+  function updateCount(){
+    var n = ($('text').value || '').length;
+    $('textCount').textContent = n + ' 字';
+  }
+  function refreshModelUI(){
+    var m = state.model;
+    $('modelHint').textContent = MODEL_HINTS[m] || '';
+    $('promptHint').textContent = PROMPT_HINTS[m] || '';
+    $('prompt').placeholder = PROMPT_PLACEHOLDERS[m] || '';
+    $('promptLabel').textContent = (m === 'mimo-v2.5-tts-voicedesign') ? '音色描述（提示词）' : '提示词 / 风格指令';
+    $('voiceField').hidden = (m !== 'mimo-v2.5-tts');
+    $('cloneField').hidden = (m !== 'mimo-v2.5-tts-voiceclone');
+    renderTags();
+  }
+
+  /* ---------- 音频处理 ---------- */
+  function base64ToBytes(b64){
+    var s = String(b64).trim();
+    var comma = s.indexOf(',');
+    if(s.indexOf('data:') === 0 && comma > -1){ s = s.slice(comma + 1); }
+    s = s.replace(/\s+/g, '');
+    var bin = atob(s);
+    var arr = new Uint8Array(bin.length);
+    for(var i = 0; i < bin.length; i++){ arr[i] = bin.charCodeAt(i); }
+    return arr;
+  }
+  function bytesToBase64(bytes){
+    var bin = '', chunk = 0x8000;
+    for(var i = 0; i < bytes.length; i += chunk){
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(bin);
+  }
+  function pcmToWav(pcm, sampleRate){
+    sampleRate = sampleRate || 24000;
+    var channels = 1, bits = 16;
+    var byteRate = sampleRate * channels * bits / 8;
+    var blockAlign = channels * bits / 8;
+    var buf = new ArrayBuffer(44 + pcm.byteLength);
+    var v = new DataView(buf);
+    function str(off, s){ for(var i = 0; i < s.length; i++){ v.setUint8(off + i, s.charCodeAt(i)); } }
+    str(0, 'RIFF'); v.setUint32(4, 36 + pcm.byteLength, true); str(8, 'WAVE'); str(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, channels, true);
+    v.setUint32(24, sampleRate, true); v.setUint32(28, byteRate, true);
+    v.setUint16(32, blockAlign, true); v.setUint16(34, bits, true);
+    str(36, 'data'); v.setUint32(40, pcm.byteLength, true);
+    new Uint8Array(buf).set(pcm, 44);
+    return new Uint8Array(buf);
+  }
+  function getPath(obj, path){
+    if(!path) return null;
+    var parts = String(path).split('.');
+    var cur = obj;
+    for(var i = 0; i < parts.length; i++){
+      if(cur === null || cur === undefined) return null;
+      cur = cur[parts[i]];
+    }
+    return cur;
+  }
+  function looksLikeBase64(v){
+    return typeof v === 'string' && v.length > 500 && /^[A-Za-z0-9+/\s]+={0,2}$/.test(v.trim());
+  }
+  function findAudioValue(obj){
+    var queue = [obj];
+    while(queue.length){
+      var cur = queue.shift();
+      if(cur === null || cur === undefined) continue;
+      if(typeof cur === 'string'){
+        if(/^https?:\/\/\S+$/i.test(cur) && /\.(mp3|wav|ogg|m4a|aac|flac|pcm|opus)(\?|$)/i.test(cur)) return cur;
+        if(looksLikeBase64(cur)) return cur;
+        continue;
+      }
+      if(Array.isArray(cur)){ cur.forEach(function(it){ queue.push(it); }); continue; }
+      if(typeof cur === 'object'){
+        Object.keys(cur).forEach(function(k){
+          var v = cur[k];
+          if(typeof v === 'string'){
+            var kl = k.toLowerCase();
+            if(kl.indexOf('url') > -1 || kl.indexOf('audio') > -1 || kl.indexOf('data') > -1 ||
+               kl.indexOf('tts') > -1 || kl.indexOf('speech') > -1 || kl.indexOf('voice') > -1 ||
+               kl.indexOf('base64') > -1 || kl.indexOf('media') > -1){
+              if(/^https?:\/\/\S+$/i.test(v)) { queue.__found = v; }
+              else if(looksLikeBase64(v)) { queue.__found = v; }
+            }
+          } else { queue.push(v); }
+        });
+        if(queue.__found){ var f = queue.__found; delete queue.__found; return f; }
+      }
+    }
+    return null;
+  }
+  function mimeForFormat(fmt){
+    if(fmt === 'wav') return 'audio/wav';
+    if(fmt === 'pcm16') return 'audio/wav';
+    if(fmt === 'mp3') return 'audio/mpeg';
+    if(fmt === 'opus') return 'audio/ogg';
+    return 'application/octet-stream';
+  }
+  function extForFormat(fmt){ return (fmt === 'pcm16') ? 'wav' : (fmt || 'bin'); }
+
+  /* ---------- 构造请求 ---------- */
+  function maskKey(k){
+    k = (k || '').trim();
+    if(!k) return '(未填写)';
+    if(k.length <= 10) return '****';
+    return k.slice(0, 6) + '****' + k.slice(-4);
+  }
+  function buildMiMoRequest(){
+    var messages = [];
+    var userContent = (state.prompt || '').trim();
+    if(userContent){ messages.push({role:'user', content:userContent}); }
+    messages.push({role:'assistant', content:(state.text || '').trim()});
+    var audio = {format: state.format};
+    if(state.model === 'mimo-v2.5-tts'){ audio.voice = state.voice; }
+    if(state.model === 'mimo-v2.5-tts-voiceclone' && cloneVoice){ audio.voice = cloneVoice; }
+    var body = {model: state.model, messages: messages, audio: audio};
+    return {
+      url: (state.url || '').trim(),
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'api-key': (state.apiKey || '').trim()},
+      bodyObj: body
+    };
+  }
+  function renderTemplate(tpl){
+    var map = {
+      text: (state.text || '').trim(),
+      prompt: (state.prompt || '').trim(),
+      voice: state.voice || '',
+      format: state.format || 'wav',
+      model: state.model || '',
+      speed: state.cSpeed || '1',
+      pitch: state.cPitch || '0',
+      volume: state.cVolume || '50'
+    };
+    return String(tpl || '').replace(/\{\{\s*(\w+)\s*\}\}/g, function(m, k){
+      return (map[k] !== undefined) ? map[k] : m;
+    });
+  }
+  function buildCustomRequest(){
+    var headers;
+    try{ headers = JSON.parse(state.cHeaders || '{}'); }
+    catch(e){ throw new Error('请求头不是合法 JSON：' + e.message); }
+    var rendered = renderTemplate(state.cBody);
+    var bodyObj = null;
+    if((state.cMethod || 'POST') !== 'GET'){
+      try{ bodyObj = JSON.parse(rendered); }
+      catch(e){ throw new Error('请求体模板渲染后不是合法 JSON：' + e.message); }
+    }
+    return {
+      url: (state.cUrl || '').trim(),
+      method: state.cMethod || 'POST',
+      headers: headers,
+      bodyObj: bodyObj,
+      rendered: rendered
+    };
+  }
+
+  /* ---------- 主流程 ---------- */
+  function generate(){
+    if(busy) return;
+    clearError();
+    var req;
+    try{
+      if(state.mode === 'mimo'){
+        if(!(state.apiKey || '').trim()){ throw new Error('请先填写 API Key（在 platform.xiaomimimo.com 创建）'); }
+        if(!(state.text || '').trim()){ throw new Error('请填写合成文本'); }
+        if(state.model === 'mimo-v2.5-tts-voicedesign' && !(state.prompt || '').trim()){
+          throw new Error('voicedesign 模型必须填写“音色描述（提示词）”');
+        }
+        if(state.model === 'mimo-v2.5-tts-voiceclone' && !cloneVoice){
+          throw new Error('voiceclone 模型需要先上传克隆音频样本');
+        }
+        req = buildMiMoRequest();
+        $('mimoPreview').textContent = prettyPreview(req);
+        $('customPreview').textContent = '';
+      }else{
+        if(!(state.cUrl || '').trim()){ throw new Error('请填写接口地址'); }
+        if(!(state.text || '').trim()){ throw new Error('请填写合成文本（自定义模式的 {{text}} 取自“合成文本”输入框）'); }
+        req = buildCustomRequest();
+        $('customPreview').textContent = prettyPreview(req);
+        $('mimoPreview').textContent = '';
+      }
+    }catch(e){
+      showError('请求参数有误', e.message);
+      return;
+    }
+    if(!/^https?:\/\//i.test(req.url)){ showError('请求参数有误', '接口地址必须以 http:// 或 https:// 开头'); return; }
+
+    lastRequest = req;
+    var fetchOpts = {
+      method: req.method,
+      headers: req.headers
+    };
+    if(req.method !== 'GET' && req.bodyObj !== null && req.bodyObj !== undefined){
+      fetchOpts.body = JSON.stringify(req.bodyObj);
+    }
+
+    busy = true;
+    var btn = $('btnGenerate');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>生成中...';
+    setStatus('run', '请求中...', '');
+    log('发起请求：' + req.method + ' ' + req.url);
+
+    var controller = new AbortController();
+    fetchOpts.signal = controller.signal;
+    var timer = setTimeout(function(){ controller.abort(); }, 120000);
+    var t0 = Date.now();
+
+    fetch(req.url, fetchOpts).then(function(res){
+      var ms = Date.now() - t0;
+      log('收到响应：HTTP ' + res.status + '，' + ms + 'ms');
+      if(!res.ok){
+        return res.text().then(function(t){
+          var msg = 'HTTP ' + res.status;
+          try{
+            var j = JSON.parse(t);
+            if(j && j.error){ msg += ' - ' + (j.error.message || '') + (j.error.code ? '（code ' + j.error.code + '）' : ''); }
+          }catch(e){}
+          if(res.status === 401){ msg += '。请检查 API Key 是否正确、是否已欠费或过期。'; }
+          throw new Error(msg);
+        });
+      }
+      return extractAudio(res).then(function(r){
+        finishAudio(r, ms);
+      });
+    }).catch(function(err){
+      clearTimeout(timer);
+      busy = false;
+      btn.disabled = false;
+      btn.textContent = '生成并试听';
+      if(err && err.name === 'AbortError'){
+        setStatus('err', '请求超时', '');
+        showError('请求超时（120 秒）', '合成时间较长时可能出现，可重试或缩短文本。');
+        return;
+      }
+      if(err instanceof TypeError){
+        setStatus('err', '网络错误', '');
+        showError('请求失败：网络错误或跨域（CORS）被拦截',
+          '可能原因：1) 当前网络无法访问该域名（检查代理/VPN）；2) 目标接口不允许浏览器跨域调用。' +
+          '小米 MiMo 官方接口已确认支持跨域；若你使用了自定义接口或代理，请确认其返回了 access-control-allow-origin 头。');
+        return;
+      }
+      setStatus('err', '生成失败', '');
+      showError('生成失败', err && err.message ? err.message : String(err));
+    });
+    clearTimeout(timer);
+  }
+
+  function prettyPreview(req){
+    var obj = {
+      url: req.url,
+      method: req.method,
+      headers: req.headers,
+      body: req.bodyObj !== undefined && req.bodyObj !== null ? req.bodyObj : (req.rendered || null)
+    };
+    if(obj.headers){
+      var h = {};
+      Object.keys(obj.headers).forEach(function(k){
+        var v = String(obj.headers[k]);
+        if(/api-?key|authorization/i.test(k)){ v = maskKey(v); }
+        h[k] = v;
+      });
+      obj.headers = h;
+    }
+    if(state.mode === 'mimo' && obj.body && obj.body.audio && typeof obj.body.audio.voice === 'string' && obj.body.audio.voice.indexOf('data:') === 0){
+      obj.body.audio.voice = 'data:audio/...;base64,（克隆样本 ' + Math.round(obj.body.audio.voice.length / 1024) + 'KB）';
+    }
+    return JSON.stringify(obj, null, 2);
+  }
+
+  function extractAudio(res){
+    var ct = (res.headers.get('content-type') || '').toLowerCase();
+    var parseMode = (state.mode === 'custom') ? state.cParse : 'auto';
+
+    if(parseMode === 'binary'){
+      return res.arrayBuffer().then(function(ab){
+        return {bytes: new Uint8Array(ab), mime: ct.indexOf('audio/') === 0 ? ct : 'application/octet-stream', ext: extFromCt(ct)};
+      });
+    }
+    if(ct.indexOf('audio/') === 0){
+      return res.blob().then(function(b){
+        return {blob: b, mime: ct.split(';')[0], ext: extFromCt(ct)};
+      });
+    }
+    if(ct.indexOf('event-stream') > -1){
+      return Promise.reject(new Error('检测到流式（event-stream）响应，本工具暂不支持流式解析，请使用非流式调用。'));
+    }
+    return res.text().then(function(raw){
+      var json = null;
+      try{ json = JSON.parse(raw); }catch(e){}
+      if(json === null){
+        if(looksLikeBase64(raw)){
+          return decodeBase64Audio(raw);
+        }
+        var snippet = raw.slice(0, 300);
+        return Promise.reject(new Error('响应既不是 JSON 也不是可识别的音频。响应开头：' + snippet));
+      }
+      var value = null;
+      if(parseMode === 'json-base64' || parseMode === 'json-url'){
+        value = getPath(json, state.cPath);
+      }else{
+        value = findAudioValue(json);
+      }
+      if(!value || typeof value !== 'string'){
+        return Promise.reject(new Error('未在响应中找到音频字段' + (parseMode !== 'auto' ? '（路径：' + state.cPath + '）' : '') + '。响应结构：' + JSON.stringify(json).slice(0, 300)));
+      }
+      if(/^https?:\/\//i.test(value)){
+        return fetch(value).then(function(r2){
+          if(!r2.ok) throw new Error('音频 URL 下载失败：HTTP ' + r2.status);
+          return r2.blob().then(function(b){
+            return {blob: b, mime: b.type || 'audio/mpeg', ext: extFromUrl(value)};
+          });
+        });
+      }
+      return decodeBase64Audio(value);
+    });
+  }
+  function decodeBase64Audio(b64){
+    var bytes = base64ToBytes(b64);
+    if(state.mode === 'mimo' && state.format === 'pcm16'){
+      bytes = pcmToWav(bytes, 24000);
+      return {bytes: bytes, mime: 'audio/wav', ext: 'wav'};
+    }
+    var fmt = (state.mode === 'mimo') ? state.format : 'bin';
+    return {bytes: bytes, mime: mimeForFormat(fmt), ext: extForFormat(fmt)};
+  }
+  function extFromCt(ct){
+    if(ct.indexOf('mpeg') > -1 || ct.indexOf('mp3') > -1) return 'mp3';
+    if(ct.indexOf('wav') > -1) return 'wav';
+    if(ct.indexOf('ogg') > -1) return 'ogg';
+    if(ct.indexOf('aac') > -1) return 'aac';
+    if(ct.indexOf('flac') > -1) return 'flac';
+    return 'bin';
+  }
+  function extFromUrl(u){
+    var m = String(u).split('?')[0].match(/\.([a-z0-9]{2,5})$/i);
+    return m ? m[1].toLowerCase() : 'bin';
+  }
+
+  function finishAudio(r, ms){
+    busy = false;
+    var btn = $('btnGenerate');
+    btn.disabled = false;
+    btn.textContent = '生成并试听';
+
+    var blob, mime, ext;
+    if(r.blob){ blob = r.blob; mime = r.mime || blob.type; ext = r.ext || extFromCt(mime); }
+    else{
+      mime = r.mime; ext = r.ext;
+      blob = new Blob([r.bytes], {type: mime});
+    }
+    var url = URL.createObjectURL(blob);
+    var label = (state.mode === 'mimo')
+      ? (state.model.replace('mimo-v2.5-tts', 'MiMo') + ' · ' + (state.model === 'mimo-v2.5-tts' ? state.voice : (state.model === 'mimo-v2.5-tts-voiceclone' ? '克隆音色' : '设计音色')))
+      : '自定义接口';
+    label += ' · ' + (state.text || '').slice(0, 8);
+
+    currentAudio = {url: url, mime: mime, ext: ext, size: blob.size, label: label};
+
+    var player = $('player');
+    player.src = url;
+    $('btnDownload').disabled = false;
+    $('audioInfo').textContent = '格式 ' + (mime || '-') + ' · 大小 ' + formatSize(blob.size) + ' · 耗时 ' + ms + 'ms';
+    setStatus('ok', '生成成功', ms + 'ms');
+
+    player.onloadedmetadata = function(){
+      if(isFinite(player.duration) && player.duration > 0){
+        $('audioInfo').textContent += ' · 时长 ' + player.duration.toFixed(1) + 's';
+      }
+    };
+
+    // 历史
+    history.unshift(currentAudio);
+    if(history.length > 5){
+      var removed = history.pop();
+      if(removed && removed.url !== url){ URL.revokeObjectURL(removed.url); }
+    }
+    renderHistory();
+
+    log('音频就绪：' + formatSize(blob.size) + ' (' + mime + ')');
+    var p = player.play();
+    if(p && p.catch){
+      p.catch(function(){
+        toast('已生成，点击播放按钮试听');
+      });
+    }
+  }
+  function renderHistory(){
+    var box = $('history');
+    box.innerHTML = '';
+    $('historyLabel').hidden = history.length < 1;
+    history.forEach(function(h, i){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip';
+      b.textContent = (i === 0 ? '当前 · ' : '') + h.label;
+      b.onclick = function(){
+        $('player').src = h.url;
+        currentAudio = h;
+        $('btnDownload').disabled = false;
+        $('audioInfo').textContent = '格式 ' + h.mime + ' · 大小 ' + formatSize(h.size) + '（历史回放）';
+        var p = $('player').play();
+        if(p && p.catch){ p.catch(function(){}); }
+      };
+      box.appendChild(b);
+    });
+  }
+  function formatSize(n){
+    if(n < 1024) return n + ' B';
+    if(n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    return (n / 1024 / 1024).toFixed(2) + ' MB';
+  }
+
+  /* ---------- 下载 / 复制 ---------- */
+  function downloadAudio(){
+    if(!currentAudio) return;
+    var d = new Date();
+    var stamp = '' + d.getFullYear() + ('0'+(d.getMonth()+1)).slice(-2) + ('0'+d.getDate()).slice(-2) +
+      '-' + ('0'+d.getHours()).slice(-2) + ('0'+d.getMinutes()).slice(-2) + ('0'+d.getSeconds()).slice(-2);
+    var a = document.createElement('a');
+    a.href = currentAudio.url;
+    a.download = 'mimo-tts-' + stamp + '.' + currentAudio.ext;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast('已开始下载');
+  }
+  function copyLastRequest(){
+    if(!lastRequest){ toast('还没有生成过请求'); return; }
+    var text = prettyPreview(lastRequest);
+    function done(){ toast('请求 JSON 已复制'); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    }else{
+      fallbackCopy(text); done();
+    }
+  }
+  function fallbackCopy(text){
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+  }
+
+  /* ---------- 克隆样本 ---------- */
+  function handleCloneFile(input){
+    var file = input.files && input.files[0];
+    if(!file) return;
+    if(file.size > 10 * 1024 * 1024){
+      showError('文件过大', '克隆样本 Base64 后不得超过 10MB，当前文件 ' + formatSize(file.size));
+      input.value = '';
+      return;
+    }
+    clearError();
+    var reader = new FileReader();
+    reader.onload = function(){
+      var bytes = new Uint8Array(reader.result);
+      var mime = file.type || (/\.wav$/i.test(file.name) ? 'audio/wav' : 'audio/mpeg');
+      cloneVoice = 'data:' + mime + ';base64,' + bytesToBase64(bytes);
+      cloneName = file.name;
+      $('cloneName').textContent = cloneName + '（' + formatSize(file.size) + '）';
+      $('cloneClear').hidden = false;
+      log('已载入克隆样本：' + cloneName);
+      toast('克隆样本已就绪');
+    };
+    reader.onerror = function(){ showError('读取文件失败', '无法读取所选音频文件'); };
+    reader.readAsArrayBuffer(file);
+  }
+  function clearClone(){
+    cloneVoice = null; cloneName = '';
+    $('cloneFile').value = '';
+    $('cloneName').textContent = '未选择';
+    $('cloneClear').hidden = true;
+  }
+
+  /* ---------- 其他 ---------- */
+  function toggleKey(){
+    var el = $('apiKey');
+    var b = el.nextElementSibling;
+    if(el.type === 'password'){ el.type = 'text'; b.textContent = '隐藏'; }
+    else{ el.type = 'password'; b.textContent = '显示'; }
+  }
+  function clearConfig(){
+    try{ localStorage.removeItem(LS_KEY); }catch(e){}
+    toast('本机保存的配置已清除，刷新后恢复默认');
+    log('已清除本机配置');
+  }
+  window.switchTab = function(mode){
+    state.mode = mode; saveState();
+    $('tab-mimo').hidden = (mode !== 'mimo');
+    $('tab-custom').hidden = (mode !== 'custom');
+    $('tabBtn-mimo').classList.toggle('active', mode === 'mimo');
+    $('tabBtn-custom').classList.toggle('active', mode === 'custom');
+  };
+  window.toggleKey = toggleKey;
+  window.generate = generate;
+  window.downloadAudio = downloadAudio;
+  window.copyLastRequest = copyLastRequest;
+  window.clearConfig = clearConfig;
+  window.clearClone = clearClone;
+
+  /* ---------- 启动 ---------- */
+  $('cloneFile').addEventListener('change', function(){ handleCloneFile(this); });
+  $('text').addEventListener('input', updateCount);
+  initForm();
+  switchTab(state.mode || 'mimo');
+  setStatus('', '等待生成', '');
+  log('页面已就绪，填入 API Key 后点击“生成并试听”');
+})();
+</script>
+</body>
+</html>
